@@ -1,8 +1,38 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+    Layout = "_IndexLayout";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container">
+
+    <div class="forms">
+        <form action="login.php" method="post" id="login-form">
+            <h1>Вход</h1>
+            <div class="form-group">
+                <label for="login-email">Username:</label>
+                <input type="email" id="login-email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Пароль:</label>
+                <input type="password" id="login-password" name="password" required>
+            </div>
+            <button type="submit">Войти</button>
+            <p>Нет аккаунта? <a href="#" onclick="toggleForm()">Зарегистрироваться</a></p>
+        </form>
+        <form action="register.php" method="post" class="hidden" id="register-form">
+            <h2>Регистрация</h2>
+            <div class="form-group">
+                <label for="register-email">Email:</label>
+                <input type="email" id="register-email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="register-password">Пароль:</label>
+                <input type="password" id="register-password" name="password" required>
+            </div>
+            <button type="submit">Зарегистрироваться</button>
+            <p>Уже есть аккаунт? <a href="#" onclick="toggleForm()">Войти</a></p>
+        </form>
+    </div>
+
+    
 </div>
