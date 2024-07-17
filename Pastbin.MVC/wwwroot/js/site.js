@@ -14,3 +14,5 @@ function toggleForm() {
         registerForm.classList.remove('hidden');
     }
 }
+//
+

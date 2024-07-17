@@ -1,0 +1,43 @@
+﻿@model ResponseModel<PostListModel>;
+@{
+    ViewData["Title"] = "Home Page";
+}
+<div class="container">
+    <h1>Главная страница</h1>
+
+    <div id="user-data">
+        <h2>Данные пользователя</h2>
+        <h3>Имя: <span>@Model.Result.Username</span></h3>
+    </div>
+
+    <h3>Ваши посты (@Model.Result.Posts.Count)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Url</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var post in Model.Result.Posts)
+            {
+            <tr>
+                <td>@post.Id</td>
+                    <td>
+                        <a href="https://@post.UrlAWS">@post.HashUrl</a>
+                    </td>
+                <td>
+                    <a href="@Url.Action("DeletePost", "Home",
+                            new PostDeleteDTO(){hashUrl=@post.HashUrl,username=Model.Result.Username}
+                            )"
+                    class="btn btn-danger">Delete</a>
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+
+    <button asp-controller="Home" asp-action="CreatePost">Создать пост</button>
+    <button asp-controller="Home" asp-action="Index">Выйти</button>
+</div>
