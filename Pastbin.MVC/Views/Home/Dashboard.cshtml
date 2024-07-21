@@ -2,6 +2,18 @@
 @{
     ViewData["Title"] = "Home Page";
 }
+<div id="myModal" class="modal hidden">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Введите текст</h2>
+        <form asp-controller="Home" asp-action="CreatePost" >
+            <label for="post">Post:</label><br>
+            <textarea class="form-input" name="Text" rows="8"></textarea>
+            <input style="display: none;" value="@Model.Result.Username" name="Username" />
+            <button class="button-action" type="submit">Создать</button>
+        </form>
+    </div>
+</div>
 <div class="container">
     <h1>Главная страница</h1>
 
@@ -37,7 +49,7 @@
             }
         </tbody>
     </table>
-
-    <button asp-controller="Home" asp-action="CreatePost">Создать пост</button>
-    <button asp-controller="Home" asp-action="Index">Выйти</button>
+    <a class="button-action" href="#" id="openModal">Создать пост</a>
+    @* <a href="@Url.Action("Create","Home")" class="button-action">Создать пост</a> *@
+    <a href="@Url.Action("Index","Home")" class="button-action">Выйти</a>
 </div>

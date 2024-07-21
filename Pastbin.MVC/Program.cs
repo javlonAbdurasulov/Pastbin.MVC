@@ -8,7 +8,13 @@ namespace Pastbin.MVC
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
-
+            builder.Services.AddHttpClient(
+                "pastbin",
+                clientPastbin =>
+                {
+                    clientPastbin.BaseAddress = new Uri("https://localhost:7059/pastbin/");
+                }
+                );
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

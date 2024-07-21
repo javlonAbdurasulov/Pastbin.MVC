@@ -12,17 +12,59 @@ namespace Pastbin.MVC.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
-        public IActionResult Registration([FromForm] UserCreateDTO userCreate)
+        public async Task<IActionResult> Registration([FromForm] UserCreateDTO userCreate)
         {
+            var json = System.Text.Json.JsonSerializer.Serialize(userCreate);
+            var responseMessage =await PostAsync("User/Create", json);
 
+            //ResponseModel<UserDTO> responseUser = JsonConvert.DeserializeObject<ResponseModel<UserDTO>>(responseMessage);
+            
+            //
             UserDTO user = new UserDTO();
-            ResponseModel<UserDTO> response = new(user);
+            user.Username = "Javlon";
+
+            List<int> ints = new() { 1, 2, 3 };
+            user.Posts = ints;
+
+            ResponseModel<UserDTO> responseUser = new(user);
+            //
+            if(responseUser.Result == null)
+            {
+                return View("~/Views/Home/Index.cshtml", new ResponseModel<UserDTO>(responseUser.Error));
+            }
+
+            //
+            List<Post> posts = new List<Post>()
+            {
+                new Post()
+                {
+                    Id = 1,
+                    CreateTime = DateTime.Now,
+                    EndTime = DateTime.Now,
+                    ExpireHour = 0,
+                    HashUrl="ssilka",
+                    UrlAWS = "google.com",
+                    UserId = 2,
+                }
+            };
+            PostListModel model = new PostListModel();
+            model.Username = user.Username;
+            model.Posts = posts;
+
+            ResponseModel<PostListModel> response = new(model);
+            //
+
             return View("~/Views/Home/Dashboard.cshtml", response);
+            //return View("~/Views/Home/Dashboard.cshtml", responseUser);
+
+
         }
         public IActionResult Login([FromForm] UserCreateDTO userLogin)
         {
@@ -56,9 +98,9 @@ namespace Pastbin.MVC.Controllers
             return View("~/Views/Home/Dashboard.cshtml", response);
         }
         
-        public IActionResult CreatePost([FromForm] UserCreateDTO userLogin)
+        public IActionResult CreatePost([FromForm] PostCreateDTO postCreate)
         {
-            var json = System.Text.Json.JsonSerializer.Serialize(userLogin);
+            var json = System.Text.Json.JsonSerializer.Serialize(postCreate);
 
             //
             UserDTO user = new UserDTO();
@@ -103,19 +145,38 @@ namespace Pastbin.MVC.Controllers
             return View("~/Views/Home/Dashboard.cshtml", response);
         }
 
-        public async Task PostAsync(string url, string json)
+        public async Task<string> PostAsync(string url, string json)
         {
-            using var client = new HttpClient();
+            using var client = _httpClientFactory.CreateClient("pastbin");
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
+            
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await client.PostAsync(url, content);
-            response.EnsureSuccessStatusCode();
+            var response = "www";//await client.PostAsync(url, content);
+
+            //response.EnsureSuccessStatusCode();
+
+            //return await response.Content.ReadAsStringAsync();
+            return response;
+        }
+        public async Task<string> GetAsync(string url,string json)
+        {
+            using var client = _httpClientFactory.CreateClient("pastbin");
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            var escapedUsername = Uri.EscapeDataString(json);
+
+            var requestUrl = $"{url}?Username={escapedUsername}";
+            
+            //var response = await client.GetAsync(requestUrl);
+            //response.EnsureSuccessStatusCode();
+
+            //return await response.Content.ReadAsStringAsync();
+            return requestUrl;
         }
         public async Task<bool> DeleteAsync(string url)
         {
-            using var client = new HttpClient();
+            var client = _httpClientFactory.CreateClient("pastbin");
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             var response = await client.DeleteAsync(url);
