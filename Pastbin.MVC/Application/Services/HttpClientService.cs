@@ -22,11 +22,13 @@ namespace Pastbin.MVC.Application.Services
             {
                 using HttpClient client = await CreateClient(_clientName);
                 var response = await client.SendAsync(httpRequest);
-
-                using (var contentStream = await response.Content.ReadAsStreamAsync())
-                {
-                    return await JsonSerializer.DeserializeAsync<HttpResponseMessage>(contentStream);
-                }
+                
+                return response;
+                //using (var contentStream = await response.Content.ReadAsStreamAsync())
+                //{
+                //    return await JsonSerializer.DeserializeAsync<HttpResponseMessage>(contentStream);
+                //}
+                
 
             }
             catch (HttpRequestException ex)

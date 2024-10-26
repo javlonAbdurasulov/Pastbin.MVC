@@ -75,16 +75,16 @@ namespace Pastbin.MVC.Controllers
 
             HttpRequestMessage httpRequest = new(HttpMethod.Get, $"User/GetByUsername?username={user.Username}");
             var response = await _httpClientService.GetAsync(httpRequest);
-            var responseUser = await response.Content.ReadFromJsonAsync<ResponseModel<UserDTO>>();
+            var responseUser = JsonConvert.DeserializeObject<ResponseModel<UserDTO>>(await response.Content.ReadAsStringAsync());
             if (responseUser.Result == null)
             {
                 return View("~/Views/Home/Index.cshtml", new ResponseModel<UserCreateDTO>(responseUser.Error)); 
             }
             PostListModel model = new PostListModel();
             model.Username= responseUser.Result.Username;
-            httpRequest.RequestUri = new($"Posts/GetAllFromUsername?username={model.Username}");
-            var responsePosts = await _httpClientService.GetAsync(httpRequest);
-            var posts = await responsePosts.Content.ReadFromJsonAsync<ResponseModel<IEnumerable<Post>>>();
+            HttpRequestMessage httpRequest2 = new(HttpMethod.Get, $"Posts/GetAllFromUsername?username={model.Username}");
+            var responsePosts = await _httpClientService.GetAsync(httpRequest2);
+            var posts = JsonConvert.DeserializeObject<ResponseModel<IEnumerable<Post>>>(await responsePosts.Content.ReadAsStringAsync());
             if (posts.Result == null)
             {
                 model.Posts = new();
@@ -110,7 +110,7 @@ namespace Pastbin.MVC.Controllers
             #endregion
 
             ResponseModel<PostListModel> responseDashModel = new(model);
-            return View("~/Views/Home/Dashboard.cshtml", response);
+            return View("~/Views/Home/Dashboard.cshtml", responseDashModel);
         }
         
         public IActionResult CreatePost([FromForm] PostCreateDTO postCreate)
