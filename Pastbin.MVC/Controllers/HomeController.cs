@@ -6,18 +6,19 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text;
 using Newtonsoft.Json;
+using Pastbin.MVC.Application.Interfaces;
 
 namespace Pastbin.MVC.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IHttpClientService _httpClientService;
 
-        public HomeController(ILogger<HomeController> logger, IHttpClientFactory httpClientFactory)
+        public HomeController(ILogger<HomeController> logger, IHttpClientService httpClientService)
         {
             _logger = logger;
-            _httpClientFactory = httpClientFactory;
+            _httpClientService = httpClientService;
         }
         public async Task<IActionResult> Registration([FromForm] UserCreateDTO userCreate)
         {
@@ -66,35 +67,49 @@ namespace Pastbin.MVC.Controllers
 
 
         }
-        public IActionResult Login([FromForm] UserCreateDTO userLogin)
+        public async Task<IActionResult> Login([FromForm] UserCreateDTO userLogin)
         {
 
             UserDTO user = new UserDTO();
-            user.Username = "Javlon";
+            user.Username = userLogin.Username;
 
-            List<int> ints = new() { 1,2,3};
-            user.Posts=ints;
-            //getallpostbyusername
-            List<Post> posts = new List<Post>()
+            HttpRequestMessage httpRequest = new(HttpMethod.Get, $"User/GetByUsername?username={user.Username}");
+            var response = await _httpClientService.GetAsync(httpRequest);
+            var responseUser = await response.Content.ReadFromJsonAsync<ResponseModel<UserDTO>>();
+            if (responseUser.Result == null)
             {
-                new Post()
-                {
-                    Id = 1,
-                    CreateTime = DateTime.Now,
-                    EndTime = DateTime.Now,
-                    ExpireHour = 0,
-                    HashUrl="ssilka",
-                    UrlAWS = "google.com",
-                    UserId = 2,
-                }
-            };
-
-
+                return View("~/Views/Home/Index.cshtml", new ResponseModel<UserCreateDTO>(responseUser.Error)); 
+            }
             PostListModel model = new PostListModel();
-            model.Username= user.Username;
-            model.Posts=posts;
+            model.Username= responseUser.Result.Username;
+            httpRequest.RequestUri = new($"Posts/GetAllFromUsername?username={model.Username}");
+            var responsePosts = await _httpClientService.GetAsync(httpRequest);
+            var posts = await responsePosts.Content.ReadFromJsonAsync<ResponseModel<IEnumerable<Post>>>();
+            if (posts.Result == null)
+            {
+                model.Posts = new();
+            }
+            model.Posts = posts.Result.ToList();
 
-            ResponseModel<PostListModel> response = new(model);
+            #region MyRegion
+
+            //getallpostbyusername
+            //List<Post> posts = new List<Post>()
+            //{
+            //    new Post()
+            //    {
+            //        Id = 1,
+            //        CreateTime = DateTime.Now,
+            //        EndTime = DateTime.Now,
+            //        ExpireHour = 0,
+            //        HashUrl="ssilka",
+            //        UrlAWS = "google.com",
+            //        UserId = 2,
+            //    }
+            //};
+            #endregion
+
+            ResponseModel<PostListModel> responseDashModel = new(model);
             return View("~/Views/Home/Dashboard.cshtml", response);
         }
         
