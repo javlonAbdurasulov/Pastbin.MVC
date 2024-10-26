@@ -1,3 +1,6 @@
+using Pastbin.MVC.Application.Interfaces;
+using Pastbin.MVC.Application.Services;
+
 namespace Pastbin.MVC
 {
     public class Program
@@ -15,6 +18,7 @@ namespace Pastbin.MVC
                     clientPastbin.BaseAddress = new Uri("https://localhost:7059/pastbin/");
                 }
                 );
+            builder.Services.AddScoped<IHttpClientService, HttpClientService>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
