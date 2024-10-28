@@ -67,7 +67,7 @@ namespace Pastbin.MVC.Controllers
 
 
         //}
-        public async Task<IActionResult> Login([FromForm] UserCreateDTO userLogin)
+        public async Task<IActionResult> Login(UserCreateDTO userLogin)
         {
 
             UserDTO user = new UserDTO();
@@ -112,32 +112,56 @@ namespace Pastbin.MVC.Controllers
             ResponseModel<PostListModel> responseDashModel = new(model);
             return View("~/Views/Home/Dashboard.cshtml", responseDashModel);
         }
-        
         public async Task<IActionResult> CreatePost([FromForm] PostCreateDTO postCreate)
         {
-            //var json = System.Text.Json.JsonSerializer.Serialize(postCreate);
-            //StringContent stringContent = new StringContent(json, Encoding.UTF8, "application/json");
-
             HttpRequestMessage httpRequest = new(HttpMethod.Post, $"Posts/Create");
             var response = await _httpClientService.PostAsync<PostCreateDTO>(httpRequest, postCreate);
+
+            // Убедитесь, что запрос прошел успешно
+            if (!response.IsSuccessStatusCode)
+            {
+                return View("~/Views/Home/Index.cshtml", new ResponseModel<UserCreateDTO> { Error = "Ошибка при создании поста" });
+            }
+
             var json = await response.Content.ReadAsStringAsync();
             var post = JsonConvert.DeserializeObject<ResponseModel<Post>>(json);
-            if (post.Result == null)
+
+            if (post?.Result == null)
             {
-                return View("~/Views/Home/Index.cshtml", new ResponseModel<UserCreateDTO>(post.Error));
+                return View("~/Views/Home/Index.cshtml", new ResponseModel<UserCreateDTO> { Error = post?.Error });
             }
+
             UserCreateDTO userLogin = new()
             {
                 Username = postCreate.UserName
             };
-            return RedirectToAction("/Home/Login",userLogin);
-            //
-            //UserDTO user = new UserDTO();
-            //List<int> ints = new() { 1,2,3};
-            //user.Posts=ints;
-            //ResponseModel<UserDTO> response = new(user);
-            //return View("~/Views/Home/Dashboard.cshtml", response);
+            return RedirectToAction("Login", "Home", userLogin);
         }
+        //public async Task<IActionResult> CreatePost([FromForm] PostCreateDTO postCreate)
+        //{
+        //    //var json = System.Text.Json.JsonSerializer.Serialize(postCreate);
+        //    //StringContent stringContent = new StringContent(json, Encoding.UTF8, "application/json");
+
+        //    HttpRequestMessage httpRequest = new(HttpMethod.Post, $"Posts/Create");
+        //    var response = await _httpClientService.PostAsync<PostCreateDTO>(httpRequest, postCreate);
+        //    var json = await response.Content.ReadAsStringAsync();
+        //    var post = JsonConvert.DeserializeObject<ResponseModel<Post>>(json);
+        //    if (post.Result == null)
+        //    {
+        //        return View("~/Views/Home/Index.cshtml", new ResponseModel<UserCreateDTO>(post.Error));
+        //    }
+        //    UserCreateDTO userLogin = new()
+        //    {
+        //        Username = postCreate.UserName
+        //    };
+        //    return RedirectToAction("/Home/Login",userLogin);
+        //    //
+        //    //UserDTO user = new UserDTO();
+        //    //List<int> ints = new() { 1,2,3};
+        //    //user.Posts=ints;
+        //    //ResponseModel<UserDTO> response = new(user);
+        //    //return View("~/Views/Home/Dashboard.cshtml", response);
+        //}
 
         public async Task<IActionResult> DeletePost(PostDeleteDTO postDelete)
         {

@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Pastbin.MVC.Application.Interfaces;
 using Pastbin.MVC.Models;
+using System.Text;
 using System.Text.Json;
 
 namespace Pastbin.MVC.Application.Services
@@ -37,29 +39,26 @@ namespace Pastbin.MVC.Application.Services
             }
         }
 
-        public async Task<HttpResponseMessage> PostAsync<T>(HttpRequestMessage httpRequest,T obj)
+        public async Task<HttpResponseMessage> PostAsync<T>(HttpRequestMessage httpRequest, T obj)
         {
             try
             {
-                httpRequest.Content = JsonContent.Create(obj);
+                httpRequest.Content = new StringContent(JsonConvert.SerializeObject(obj), Encoding.UTF8, "application/json");
 
                 using HttpClient client = await CreateClient(_clientName);
 
                 var response = await client.SendAsync(httpRequest);
                 response.EnsureSuccessStatusCode();
 
-
-                using (var contentStream = await response.Content.ReadAsStreamAsync())
-                {
-                    return await JsonSerializer.DeserializeAsync<HttpResponseMessage>(contentStream);
-                }
+                // Возвращаем сам HttpResponseMessage без десериализации
+                return response;
             }
             catch (HttpRequestException ex)
             {
-
                 throw ex;
             }
         }
+
 
         Task<HttpClient> CreateClient(string clientName)
         {
