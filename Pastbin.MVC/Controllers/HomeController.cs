@@ -113,58 +113,92 @@ namespace Pastbin.MVC.Controllers
             return View("~/Views/Home/Dashboard.cshtml", responseDashModel);
         }
         
-        public IActionResult CreatePost([FromForm] PostCreateDTO postCreate)
+        public async Task<IActionResult> CreatePost([FromForm] PostCreateDTO postCreate)
         {
-            var json = System.Text.Json.JsonSerializer.Serialize(postCreate);
+            //var json = System.Text.Json.JsonSerializer.Serialize(postCreate);
+            //StringContent stringContent = new StringContent(json, Encoding.UTF8, "application/json");
 
+            HttpRequestMessage httpRequest = new(HttpMethod.Post, $"Posts/Create");
+            var response = await _httpClientService.PostAsync<PostCreateDTO>(httpRequest, postCreate);
+            var json = await response.Content.ReadAsStringAsync();
+            var post = JsonConvert.DeserializeObject<ResponseModel<Post>>(json);
+            if (post.Result == null)
+            {
+                return View("~/Views/Home/Index.cshtml", new ResponseModel<UserCreateDTO>(post.Error));
+            }
+            UserCreateDTO userLogin = new()
+            {
+                Username = postCreate.UserName
+            };
+            return RedirectToAction("/Home/Login",userLogin);
             //
-            UserDTO user = new UserDTO();
-            List<int> ints = new() { 1,2,3};
-            user.Posts=ints;
-            ResponseModel<UserDTO> response = new(user);
-            return View("~/Views/Home/Dashboard.cshtml", response);
+            //UserDTO user = new UserDTO();
+            //List<int> ints = new() { 1,2,3};
+            //user.Posts=ints;
+            //ResponseModel<UserDTO> response = new(user);
+            //return View("~/Views/Home/Dashboard.cshtml", response);
         }
 
-        //public async Task<IActionResult> DeletePost(PostDeleteDTO postDelete)
-        //{
+        public async Task<IActionResult> DeletePost(PostDeleteDTO postDelete)
+        {
+            HttpRequestMessage httpRequest = new(HttpMethod.Delete, $"Posts/Delete");
+            var response = await _httpClientService.PostAsync<PostDeleteDTO>(httpRequest, postDelete);
+            var responseDelete = JsonConvert.DeserializeObject<ResponseModel<string>>(await response.Content.ReadAsStringAsync());
+            //string _url = "";
+            //var response = await DeleteAsync($"{_url}?param1={Uri.EscapeDataString(postDelete.hashUrl)}&param2={Uri.EscapeDataString(postDelete.username)}");
+            if (responseDelete.Result == null)
+            {
+                TempData["AlertMessage"] = responseDelete.Error;
 
-        //    string _url = "";
-        //    var response = await DeleteAsync($"{_url}?param1={Uri.EscapeDataString(postDelete.hashUrl)}&param2={Uri.EscapeDataString(postDelete.username)}");
+            }
+            else
+            {
+                TempData["AlertMessage"] = responseDelete.Result;
 
-        //    PostListModel model = new PostListModel();
-        //    model.Username = postDelete.username;
-        //    //GetAllFromUsername
-        //    List<Post> posts = new List<Post>()
-        //        {
-        //            new Post()
-        //            {
-        //                Id = 1,
-        //                CreateTime = DateTime.Now,
-        //                EndTime = DateTime.Now,
-        //                ExpireHour = 0,
-        //                HashUrl="ssilka",
-        //                UrlAWS = "google.com",
-        //                UserId = 2,
-        //            }
-        //        };
-        //    model.Posts = posts;
+            }
+            UserCreateDTO userLogin = new()
+            {
+                Username = postDelete.username
+            };
+            return RedirectToAction("/Home/Dashboard",userLogin);
 
-        //    if (response == true)
-        //    {
-        //        ResponseModel<PostListModel> responseModel = new(model);
-        //        return View("~/Views/Home/Dashboard.cshtml", responseModel);
-        //    }
+            #region MyRegion
 
-        //    //ResponseModel<PostListModel> responseModel = new(model);
-        //    // no tut oshibka nado dodelat dlya esli false
-        //    return View("~/Views/Home/Dashboard.cshtml", response);
-        //}
+            //PostListModel model = new PostListModel();
+            //model.Username = postDelete.username;
+            ////GetAllFromUsername
+            //List<Post> posts = new List<Post>()
+            //    {
+            //        new Post()
+            //        {
+            //            Id = 1,
+            //            CreateTime = DateTime.Now,
+            //            EndTime = DateTime.Now,
+            //            ExpireHour = 0,
+            //            HashUrl="ssilka",
+            //            UrlAWS = "google.com",
+            //            UserId = 2,
+            //        }
+            //    };
+            //model.Posts = posts;
+
+            //if (response == true)
+            //{
+            //    ResponseModel<PostListModel> responseModel = new(model);
+            //    return View("~/Views/Home/Dashboard.cshtml", responseModel);
+            //}
+
+            ////ResponseModel<PostListModel> responseModel = new(model);
+            //// no tut oshibka nado dodelat dlya esli false
+            //return View("~/Views/Home/Dashboard.cshtml", response);
+            #endregion
+        }
 
         //public async Task<string> PostAsync(string url, string json)
         //{
         //    using var client = _httpClientFactory.CreateClient("pastbin");
         //    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            
+
         //    var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         //    var response = "www";//await client.PostAsync(url, content);
@@ -182,7 +216,7 @@ namespace Pastbin.MVC.Controllers
         //    var escapedUsername = Uri.EscapeDataString(json);
 
         //    var requestUrl = $"{url}?Username={escapedUsername}";
-            
+
         //    //var response = await client.GetAsync(requestUrl);
         //    //response.EnsureSuccessStatusCode();
 
@@ -196,11 +230,11 @@ namespace Pastbin.MVC.Controllers
 
         //    var response = await client.DeleteAsync(url);
         //    response.EnsureSuccessStatusCode();
-            
+
         //    string responseString =await response.Content.ReadAsStringAsync();
         //    var responseAction = JsonConvert.DeserializeObject<bool>(responseString);
         //    return responseAction;
-            
+
         //}
 
         public IActionResult Index()
