@@ -27,7 +27,9 @@
         <h2>Данные пользователя</h2>
         <h3>Имя: <span>@Model.Result.Username</span></h3>
     </div>
-    
+    <br />
+    <details>
+    <summary style="cursor: pointer;color:red; font-weight:600">⬇️ Создать пост(Нажмите)</summary>
     <form asp-action="CreatePost" asp-controller="Home">
         <input name="Username" type="hidden"  value="@Model.Result.Username" />
         <div>
@@ -38,10 +40,11 @@
             <label for="ModelFormDescription" class="form-label">Comment </label>
             <textarea name="Text" class="form-control" id="ModelFormDescription" rows="5" required></textarea>
         </div>
-        <button class="btn" type="submit">Создать пост</button>
+        <button class="btn-dark" type="submit">Создать пост</button>
     </form>
-
-    <h3>Ваши посты (@Model.Result.Posts.Count)</h3>
+    </details>
+    <br />
+    <h6>Ваши посты (@Model.Result.Posts.Count)</h6>
     <table>
         <thead>
             <tr>
